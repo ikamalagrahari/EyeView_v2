@@ -1,0 +1,4 @@
+static/
+.env
+__pycache__/
+eyeview-v2-firebase-adminsdk-fbsvc-a1600b8e74.json
