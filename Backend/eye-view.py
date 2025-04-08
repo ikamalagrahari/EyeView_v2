@@ -1,4 +1,4 @@
-from flask import Flask, Response, jsonify, send_from_directory, abort
+from flask import Flask, Response, jsonify, send_from_directory, abort, request
 from flask_cors import CORS
 import cv2
 import firebase_admin
@@ -12,10 +12,13 @@ import requests
 import os
 import re
 from dotenv import load_dotenv
-from threading import Thread
+from threading import Thread, Lock
 
 app = Flask(__name__, static_folder="static")
 CORS(app)  # Allow all origins
+
+# Thread-safe lock for video frames
+frame_lock = Lock()
 
 # Load environment variables
 load_dotenv()
@@ -51,7 +54,6 @@ last_alert_time = 0
 # Clip saving directory
 clip_save_dir = os.path.abspath("static/history_clips")
 os.makedirs(clip_save_dir, exist_ok=True)
-
 print(f"📁 Clip save directory: {clip_save_dir}")
 
 def get_location():
@@ -98,31 +100,32 @@ def save_clip(directory):
     filepath = os.path.join(directory, filename)
 
     print(f"🎥 Saving clip to: {filepath}")
-    
+
     out = cv2.VideoWriter(filepath, fourcc, 20.0, (1280, 720))
     if not out.isOpened():
-        print(" Failed to open VideoWriter")
+        print("❌ Failed to open VideoWriter")
         return
 
     start_time = time.time()
     frames_written = 0
 
     while time.time() - start_time < 10:
-        success, frame = video_stream.read()
+        with frame_lock:
+            success, frame = video_stream.read()
         if not success:
             continue
         out.write(frame)
         frames_written += 1
 
     out.release()
-    time.sleep(2)  # Ensure file system writes are complete
+    time.sleep(2)
 
     if frames_written == 0 or not os.path.exists(filepath) or os.path.getsize(filepath) == 0:
         print("❌ Clip was empty or not saved.")
         return
 
     print(f"✅ Clip saved: {filename} ({frames_written} frames)")
-    
+
     clip_metadata = {
         "filename": filename,
         "timestamp": datetime.datetime.now().isoformat()
@@ -131,26 +134,42 @@ def save_clip(directory):
 
 def detect_and_stream():
     alert_sent = False
-    while True:
-        success, frame = video_stream.read()
-        if not success:
-            break
 
-        results = model(frame, imgsz=640)
+    while True:
+        with frame_lock:
+            success, frame = video_stream.read()
+        if not success:
+            continue
+
+        resized_frame = cv2.resize(frame, (640, 640))
+        results = model(resized_frame, imgsz=640)
+
+        h_ratio = frame.shape[0] / 640
+        w_ratio = frame.shape[1] / 640
+
         for result in results:
             for box in result.boxes:
                 x1, y1, x2, y2 = map(int, box.xyxy[0])
                 confidence = float(box.conf[0])
+
+                x1 = int(x1 * w_ratio)
+                x2 = int(x2 * w_ratio)
+                y1 = int(y1 * h_ratio)
+                y2 = int(y2 * h_ratio)
+
                 cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
                 cv2.putText(frame, f"Violence: {confidence:.2f}", (x1, y1 - 10),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+
                 if confidence > 0.5 and not alert_sent:
                     send_alert(frame, confidence)
                     alert_sent = True
 
         _, buffer = cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), 95])
+        frame_bytes = buffer.tobytes()
+
         yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
+               b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
 
 @app.route('/video_feed')
 def video_feed():
@@ -165,27 +184,6 @@ def list_clips():
     clips_array.sort(key=lambda c: c.get("timestamp", ""), reverse=True)
     return jsonify(clips_array)
 
-@app.route('/clips/<path:filename>')
-def serve_clip(filename):
-    file_path = os.path.join(clip_save_dir, filename)
-    if not os.path.exists(file_path):
-        print(f"❌ Clip not found: {file_path}")
-        abort(404)
-    print(f"📂 Serving clip: {file_path}")
-    return send_from_directory(clip_save_dir, filename, mimetype='video/mp4', as_attachment=False)
-from flask import send_from_directory
-
-@app.route('/history_clips/<path:filename>')
-def serve_history_clip(filename):
-    file_path = os.path.join(clip_save_dir, filename)
-    if not os.path.exists(file_path):
-        print(f"❌ File not found: {file_path}")
-        abort(404)
-    print(f"📂 Serving clip via custom route: {file_path}")
-    return send_from_directory(clip_save_dir, filename, mimetype="video/mp4")
-  
-  
-
 @app.route('/history_clips/<path:filename>')
 def stream_video(filename):
     file_path = os.path.join(clip_save_dir, filename)
@@ -195,8 +193,10 @@ def stream_video(filename):
 
     range_header = request.headers.get('Range', None)
     if not range_header:
+        print(f"📂 Serving full clip: {file_path}")
         return send_from_directory(clip_save_dir, filename, mimetype="video/mp4")
 
+    print(f"📼 Streaming clip with range: {range_header}")
     size = os.path.getsize(file_path)
     byte1, byte2 = 0, None
 

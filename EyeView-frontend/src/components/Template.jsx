@@ -1,7 +1,7 @@
 import frameImage from "../assets/frame.png";
 import LoginForm from "./LoginForm";
 import { FcGoogle } from "react-icons/fc";
-import SignupForm from "./SignupForm";
+ import SignupForm from "./SignupForm";
 const Template = ({ title,desc1,decs2,image, formType, setIsLoggedIn }) => {
   return (
     <div className="flex justify-between w-11/12 max-w-[1160px] py-12 mx-auto gap-x-12">

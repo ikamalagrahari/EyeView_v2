@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Route, Routes, Navigate } from "react-router-dom"; // ✅ Import Navigate
+import { Route, Routes, Navigate } from "react-router-dom"; //  Import Navigate
 import "./App.css";
 import Navbar from "./components/Navbar";
 import Sidebar from "./components/Sidebar";
@@ -9,7 +9,9 @@ import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import Alerts from "./pages/Alerts";
 import History from "./pages/History";
-import PrivateRouter from "./components/PrivateRouter";
+import Features from "./pages/Features";
+import Contact from "./pages/Contact"; 
+import About from "./pages/About";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -38,6 +40,11 @@ function App() {
           <Route path="/" element={<Home isLoggedIn={isLoggedIn} />} />
           <Route path="/login" element={<Login setIsLoggedIn={setIsLoggedIn} />} />
           <Route path="/signup" element={<Signup setIsLoggedIn={setIsLoggedIn} />} />
+          <Route path="/features" element={<Features />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
+          
+
 
           {/*  Redirect unauthorized users to Home */}
           <Route path="*" element={<Navigate to="/" />} />

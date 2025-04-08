@@ -5,8 +5,7 @@ const Login = ({setIsLoggedIn}) => {
   return (
     <Template
     title ="Welcome Back"
-    desc1="Build skill for today, tomorrow, and beyond. "
-    decs2 ="Education to future-proof your career"
+    desc1="Stay connected. Stay informed. Stay safe with EyeView. "
     image={loginImg}
     formType="login"
     setIsLoggedIn={setIsLoggedIn}

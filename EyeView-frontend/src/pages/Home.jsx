@@ -1,73 +1,56 @@
-import React, { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import "../Home.css";
 
-const Home = () => {
-  const sentence = "Secure Focus";
-  const words = sentence.split(" ");
-  const containerRef = useRef(null);
-  const wordRef = useRef(null);
-  const [focusRect, setFocusRect] = useState({ x: 0, y: 0, width: 0, height: 0 });
+const fadeUp = {
+  hidden: { opacity: 0, y: 40 },
+  visible: (i = 1) => ({
+    opacity: 1,
+    y: 0,
+    transition: {
+      delay: i * 0.2,
+      duration: 0.6,
+      ease: "easeOut",
+    },
+  }),
+};
 
-  const blurAmount = 5;
-  const borderColor = "red";
-  const glowColor = "rgba(255, 0, 0, 0.6)";
-  const animationDuration = 0.5;
-
-  useEffect(() => {
-    if (!wordRef.current || !containerRef.current) return;
-
-    const parentRect = containerRef.current.getBoundingClientRect();
-    const activeRect = wordRef.current.getBoundingClientRect();
-
-    setFocusRect({
-      x: activeRect.left - parentRect.left - 5, // Adjusting for centering
-      y: activeRect.top - parentRect.top - 5,
-      width: activeRect.width + 10, // Adding padding
-      height: activeRect.height + 10,
-    });
-  }, []);
-
+function Home({ isLoggedIn }) {
   return (
-    <div className="home-container">
-      <div className="focus-container" ref={containerRef}>
-        <motion.span
-          ref={wordRef}
-          className="focus-word"
-          initial={{ filter: `blur(${blurAmount}px)`, opacity: 0.5 }}
-          animate={{ filter: "blur(0px)", opacity: 1 }}
-          transition={{ duration: animationDuration, ease: "easeInOut" }}
-          style={{
-            fontSize: "5rem",
-            fontWeight: "bold",
-            textTransform: "uppercase",
-            "--border-color": borderColor,
-            "--glow-color": glowColor,
-          }}
-        >
-          {sentence}
-        </motion.span>
-
-        <motion.div
-          className="focus-frame"
-          animate={{
-            x: focusRect.x,
-            y: focusRect.y,
-            width: focusRect.width,
-            height: focusRect.height,
-            opacity: 1,
-          }}
-          transition={{ duration: animationDuration, ease: "easeInOut" }}
-          style={{ "--border-color": borderColor, "--glow-color": glowColor }}
-        >
-          <span className="corner top-left"></span>
-          <span className="corner top-right"></span>
-          <span className="corner bottom-left"></span>
-          <span className="corner bottom-right"></span>
+    <div className="min-h-screen bg-[var(--color-richblack-900)] text-white px-6 md:px-20 pt-20">
+      <motion.div
+        className="max-w-6xl w-full flex flex-col items-start gap-6"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.3 }}
+      >
+        {/* Heading */}
+        <motion.div className="flex-1" variants={fadeUp} custom={1}>
+          <h1 className="text-4xl md:text-6xl font-bold leading-tight text-[var(--color-richblack-5)] mb-4">
+            Real-Time Violence Detection <br />
+            Powered by AI
+          </h1>
         </motion.div>
-      </div>
+
+        {/* Paragraph & Button */}
+        <motion.div className="flex-1" variants={fadeUp} custom={2}>
+          <p className="text-[var(--color-richblack-100)] text-lg md:text-xl mb-8 max-w-xl">
+            Stay one step ahead with <strong className="text-[#2db8e6]">EyeView</strong> — monitor live feeds,
+            detect violent behavior, and send instant alerts to admins.
+          </p>
+
+          <Link to="/login">
+            <motion.button
+              className="bg-[#2db8e6] text-white text-lg px-8 py-3 rounded-lg font-semibold shadow-md hover:bg-[#3A90AC] transition-all duration-300"
+              variants={fadeUp}
+              custom={3}
+            >
+              Live Detection
+            </motion.button>
+          </Link>
+        </motion.div>
+      </motion.div>
     </div>
   );
-};
+}
 
 export default Home;

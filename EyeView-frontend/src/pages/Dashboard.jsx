@@ -68,7 +68,7 @@ const Dashboard = () => {
                 {pausedStates[video.id] ? "Resume" : "Pause"}
               </button>
               <button
-                className="bg-green-500 text-white px-4 py-1 rounded-md"
+                className="bg-[var(--color-richblack-700)] text-white px-4 py-1 rounded-md"
                 onClick={() => toggleFullscreen(video.id)}
               >
                 {fullscreenStates[video.id] ? "Exit Fullscreen" : "Fullscreen"}
