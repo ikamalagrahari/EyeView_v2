@@ -30,7 +30,7 @@ function App() {
               <Route path="/history" element={<History />} />
               <Route path="/settings" element={<div>Settings Page</div>} />
 
-              {/* ✅ Redirect unknown routes to Dashboard */}
+              {/*  Redirect unknown routes to Dashboard */}
               <Route path="*" element={<Navigate to="/dashboard" />} />
             </Routes>
           </div>
