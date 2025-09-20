@@ -63,7 +63,7 @@ function Contact() {
             <FaPhoneAlt className="text-3xl text-[#2db8e6] mb-4 mx-auto" />
             <h3 className="text-xl font-semibold mb-2">Phone</h3>
             <p className="text-[var(--color-richblack-100)]">
-              +91 98765 43210
+              +91 8355908097
             </p>
           </motion.div>
 

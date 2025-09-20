@@ -2,3 +2,11 @@ static/
 .env
 __pycache__/
 eyeview-v2-firebase-adminsdk-fbsvc-a1600b8e74.json
+venv/
+# Virtual Environment
+venv/
+__pycache__/
+
+# IDE folders
+.vscode/
+.idea/

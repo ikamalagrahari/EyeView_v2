@@ -30,7 +30,7 @@ ADMIN_PHONE_NUMBER = os.getenv("ADMIN_PHONE_NUMBER")
 # Load YOLO model
 model = YOLO(r"C:\Users\sahil\OneDrive\Desktop\EyeView-v2\Backend\best.pt")
 
-# Open webcam
+# Open webcam  
 video_stream = cv2.VideoCapture(0)
 video_stream.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
 video_stream.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
@@ -226,4 +226,3 @@ def stream_video(filename):
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
- 
