@@ -27,15 +27,15 @@ function LoginForm({setIsLoggedIn}) {
   return (
   <form onSubmit ={submitHandler} className='flex flex-col w-full gap-y-4 mt-6' >
    <label htmlFor="Logged In" className='w-full relative '>
-       <p className=' text-[0.875rem] text-[#F1F2FF] mb-1 leading-[1.375rem]'>
+       <p className=' text-[0.875rem] text-[#F1F2FF] mb-1 leading-5.5'>
            Email Address <sup className='text-red-500'>*</sup>
        </p>
        <input required type="email" value={formData.email} onChange={changeHandler}  
-       placeholder='Enter email id' name ="email" className='bg-[#161D29] rounded-[0.5rem] text-[#F1F2FF] w-full p-[12px]'/>
+       placeholder='Enter email id' name ="email" className='bg-[#161D29] rounded-lg text-[#F1F2FF] w-full p-[12px]'/>
        
    </label>
    <label className="relative w-full">
- <p className="text-[0.875rem] text-[#F1F2FF] mb-1 leading-[1.375rem]">
+ <p className="text-[0.875rem] text-[#F1F2FF] mb-1 leading-5.5">
    Password <sup className="text-red-500">*</sup>
  </p>
 
@@ -48,18 +48,18 @@ function LoginForm({setIsLoggedIn}) {
      onChange={changeHandler}
      placeholder="Enter Password"
      name="password"
-     className="bg-[#161D29] rounded-[0.5rem] text-[#F1F2FF] w-full p-[12px] pr-10"
+     className="bg-[#161D29] rounded-lg text-[#F1F2FF] w-full p-[12px] pr-10"
    />
 
    {/* Eye Icon */}
    <span
-     className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer"
+     className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer p-2"
      onClick={() => setShowPassword((prev) => !prev)}
    >
      {showPassword ? (
-       <FaRegEye fontSize={20} fill="#AFB2BF" />
+       <FaRegEye fontSize={24} fill="#AFB2BF" />
      ) : (
-       <FaEyeSlash fontSize={20} fill="#AFB2BF" />
+       <FaEyeSlash fontSize={24} fill="#AFB2BF" />
      )}
    </span>
  </div>
@@ -73,7 +73,7 @@ function LoginForm({setIsLoggedIn}) {
 </label>
 
 
-   <button className='bg-[#2db8e6] text-[#000814] rounded-[8px] font-medium px-[12px] py-[8px]'>Sign In</button>
+   <button className='bg-[#2db8e6] text-[#000814] rounded-[8px] font-medium px-4 py-3 text-lg'>Sign In</button>
   </form>
   )
 }
