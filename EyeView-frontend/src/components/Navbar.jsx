@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from 'react-hot-toast';
 import { motion } from "framer-motion";
+import { FiMenu, FiX } from 'react-icons/fi';
 
 const navVariants = {
   hidden: { opacity: 0, y: -30 },
@@ -21,89 +22,131 @@ const navItem = {
   }),
 };
 
-const Navbar = ({ isLoggedIn, setIsLoggedIn }) => {
+const Navbar = ({ isLoggedIn, setIsLoggedIn, sidebarOpen, setSidebarOpen }) => {
   const navigate = useNavigate();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navLinks = ["Home", "Features", "About", "Contact"];
 
   return (
-    <motion.div
-      initial="hidden"
-      animate="visible"
-      variants={navVariants}
-      className="flex justify-between items-center w-11/12 max-w-[1160px] py-4 mx-auto"
-    >
-      <Link to="/">
-        <div className="text-white text-3xl font-medium">Eye View</div>
-      </Link>
+    <>
+      <motion.div
+        initial="hidden"
+        animate="visible"
+        variants={navVariants}
+        className="flex justify-between items-center w-11/12 max-w-[1160px] py-4 mx-auto"
+      >
+        <Link to="/">
+          <div className="text-white text-3xl font-medium">Eye View</div>
+        </Link>
 
-      <nav>
-        <ul className="text-[#AFB2BF] flex gap-x-6">
-          {navLinks.map((item, i) => (
-            <motion.li
-              key={item}
-              variants={navItem}
-              custom={i}
-              initial="hidden"
-              animate="visible"
-              className="cursor-pointer"
-            >
-              <Link to={`/${item.toLowerCase()}`}>{item}</Link>
-            </motion.li>
-          ))}
-        </ul>
-      </nav>
+        <nav className="hidden md:block">
+          <ul className="text-[#AFB2BF] flex gap-x-6">
+            {navLinks.map((item, i) => (
+              <motion.li
+                key={item}
+                variants={navItem}
+                custom={i}
+                initial="hidden"
+                animate="visible"
+                className="cursor-pointer"
+              >
+                <Link to={`/${item.toLowerCase()}`}>{item}</Link>
+              </motion.li>
+            ))}
+          </ul>
+        </nav>
 
-      <div className="flex items-center gap-x-4">
-        {!isLoggedIn && (
-          <Link to="/login">
+        <div className="flex items-center gap-x-4">
+          {!isLoggedIn && (
+            <Link to="/login">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="bg-[#161D29] text-[#AFB2BF] py-2 px-4 rounded-[8px] border border-[#2C333F] text-lg"
+              >
+                Login
+              </motion.button>
+            </Link>
+          )}
+          {!isLoggedIn && (
+            <Link to="/signup">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="bg-[#161D29] text-[#AFB2BF] py-2 px-4 rounded-[8px] border border-[#2C333F] text-lg"
+              >
+                Sign up
+              </motion.button>
+            </Link>
+          )}
+          {isLoggedIn && (
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="bg-[#161D29] text-[#AFB2BF] py-[8px] px-[12px] rounded-[8px] border border-[#2C333F]"
+              onClick={() => {
+                setIsLoggedIn(false);
+                toast.success("Logged Out");
+                navigate("/");
+              }}
+              className="bg-[#161D29] text-[#AFB2BF] py-2 px-4 rounded-[8px] border border-[#2C333F] text-lg"
             >
-              Login
+              Logout
             </motion.button>
-          </Link>
-        )}
-        {!isLoggedIn && (
-          <Link to="/signup">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="bg-[#161D29] text-[#AFB2BF] py-[8px] px-[12px] rounded-[8px] border border-[#2C333F]"
-            >
-              Sign up
-            </motion.button>
-          </Link>
-        )}
-        {isLoggedIn && (
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+          )}
+          {isLoggedIn && (
+            <Link to="/dashboard">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="bg-[#161D29] text-[#AFB2BF] py-2 px-4 rounded-[8px] border border-[#2C333F] text-lg"
+              >
+                Dashboard
+              </motion.button>
+            </Link>
+          )}
+          <button
             onClick={() => {
-              setIsLoggedIn(false);
-              toast.success("Logged Out");
-              navigate("/");
+              if (isLoggedIn) {
+                setSidebarOpen(!sidebarOpen);
+              } else {
+                setMobileMenuOpen(!mobileMenuOpen);
+              }
             }}
-            className="bg-[#161D29] text-[#AFB2BF] py-[8px] px-[12px] rounded-[8px] border border-[#2C333F]"
+            className="md:hidden text-white text-2xl"
           >
-            Logout
-          </motion.button>
-        )}
-        {isLoggedIn && (
-          <Link to="/dashboard">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="bg-[#161D29] text-[#AFB2BF] py-[8px] px-[12px] rounded-[8px] border border-[#2C333F]"
+            <FiMenu />
+          </button>
+        </div>
+      </motion.div>
+
+      {/* Mobile Menu Overlay */}
+      {mobileMenuOpen && !isLoggedIn && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 md:hidden">
+          <div className="bg-(--color-richblack-800) w-full h-full flex flex-col items-center justify-center">
+            <button
+              onClick={() => setMobileMenuOpen(false)}
+              className="absolute top-4 right-4 text-white text-2xl"
             >
-              Dashboard
-            </motion.button>
-          </Link>
-        )}
-      </div>
-    </motion.div>
+              <FiX />
+            </button>
+            <ul className="text-[#AFB2BF] text-center space-y-6 text-xl">
+              {navLinks.map((item) => (
+                <li key={item}>
+                  <Link
+                    to={`/${item.toLowerCase()}`}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="block py-2"
+                  >
+                    {item}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 
