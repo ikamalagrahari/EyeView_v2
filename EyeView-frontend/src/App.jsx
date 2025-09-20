@@ -10,24 +10,30 @@ import Dashboard from "./pages/Dashboard";
 import Alerts from "./pages/Alerts";
 import History from "./pages/History";
 import Features from "./pages/Features";
-import Contact from "./pages/Contact"; 
+import Contact from "./pages/Contact";
 import About from "./pages/About";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="w-screen bg-[var(--color-richblack-900)] flex flex-col">
-      <Navbar isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
+    <div className="w-screen bg-(--color-richblack-900) flex flex-col">
+      <Navbar isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
       {isLoggedIn ? (
-        <div className="flex">
-          <Sidebar />
-          <div className="flex-1 p-4">
+        <div className="flex relative">
+          <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+          {sidebarOpen && <div className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden" onClick={() => setSidebarOpen(false)}></div>}
+          <div className="flex-1 p-4 md:ml-0">
             <Routes>
+              <Route path="/" element={<Home isLoggedIn={isLoggedIn} />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/alerts" element={<Alerts />} />
               <Route path="/history" element={<History />} />
+              <Route path="/features" element={<Features />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
               <Route path="/settings" element={<div>Settings Page</div>} />
 
               {/*  Redirect unknown routes to Dashboard */}

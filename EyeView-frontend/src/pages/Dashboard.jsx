@@ -41,14 +41,14 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="bg-[var(--color-richblack-900)] min-h-screen text-white w-full p-6">
+    <div className="bg-(--color-richblack-900) min-h-screen text-white w-full p-6">
       <h1 className="text-4xl font-bold mb-6">Live Detection Dashboard</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {videos.map((video) => (
           <div
             key={video.id}
-            className="bg-[var(--color-richblack-800)] p-4 rounded-lg shadow-lg"
+            className="bg-(--color-richblack-800) p-4 rounded-lg shadow-lg"
           >
             <img
               ref={(el) => (videoRefs.current[video.id] = el)}
@@ -62,13 +62,13 @@ const Dashboard = () => {
 
             <div className="flex gap-3 mt-2">
               <button
-                className="bg-[var(--color-richblack-700)] text-white px-4 py-1 rounded-md"
+                className="bg-(--color-richblack-700) text-white px-4 py-1 rounded-md"
                 onClick={() => togglePause(video.id, video.src)}
               >
                 {pausedStates[video.id] ? "Resume" : "Pause"}
               </button>
               <button
-                className="bg-[var(--color-richblack-700)] text-white px-4 py-1 rounded-md"
+                className="bg-(--color-richblack-700) text-white px-4 py-1 rounded-md"
                 onClick={() => toggleFullscreen(video.id)}
               >
                 {fullscreenStates[video.id] ? "Exit Fullscreen" : "Fullscreen"}

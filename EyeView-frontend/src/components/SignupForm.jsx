@@ -56,7 +56,7 @@ const SignupForm = ({ setIsLoggedIn }) => {
               onChange={changeHandler}
               placeholder="Enter First Name"
               value={formData.firstName}
-              className="bg-[#161D29] text-[#F1F2FF] w-full p-3 rounded-md outline-none"
+              className="bg-[#161D29] text-[#F1F2FF] w-full p-3 rounded-md outline-hidden"
             />
           </label>
 
@@ -72,7 +72,7 @@ const SignupForm = ({ setIsLoggedIn }) => {
               onChange={changeHandler}
               placeholder="Enter Last Name"
               value={formData.lastName}
-              className="bg-[#161D29] text-[#F1F2FF] w-full p-3 rounded-md outline-none"
+              className="bg-[#161D29] text-[#F1F2FF] w-full p-3 rounded-md outline-hidden"
             />
           </label>
         </div>
@@ -89,7 +89,7 @@ const SignupForm = ({ setIsLoggedIn }) => {
             onChange={changeHandler}
             placeholder="Enter Email Address"
             value={formData.email}
-            className="bg-[#161D29] text-[#F1F2FF] w-full p-3 rounded-md outline-none"
+            className="bg-[#161D29] text-[#F1F2FF] w-full p-3 rounded-md outline-hidden"
           />
         </label>
 
@@ -106,17 +106,17 @@ const SignupForm = ({ setIsLoggedIn }) => {
               onChange={changeHandler}
               placeholder="Enter Password"
               value={formData.password}
-              className="bg-[#161D29] text-[#F1F2FF] w-full p-3 pr-12 rounded-md outline-none"
+              className="bg-[#161D29] text-[#F1F2FF] w-full p-3 pr-12 rounded-md outline-hidden"
             />
             <button
               type="button"
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-[#AFB2BF] cursor-pointer"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-[#AFB2BF] cursor-pointer p-2"
               onClick={() => setShowPassword(!showPassword)}
             >
               {showPassword ? (
-                <FaRegEye fontSize={20} />
+                <FaRegEye fontSize={24} />
               ) : (
-                <FaEyeSlash fontSize={20} />
+                <FaEyeSlash fontSize={24} />
               )}
             </button>
           </div>
@@ -135,24 +135,24 @@ const SignupForm = ({ setIsLoggedIn }) => {
               onChange={changeHandler}
               placeholder="Confirm Password"
               value={formData.confirmPassword}
-              className="bg-[#161D29] text-[#F1F2FF] w-full p-3 pr-12 rounded-md outline-none"
+              className="bg-[#161D29] text-[#F1F2FF] w-full p-3 pr-12 rounded-md outline-hidden"
             />
             <button
               type="button"
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-[#AFB2BF] cursor-pointer"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-[#AFB2BF] cursor-pointer p-2"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
             >
               {showConfirmPassword ? (
-                <FaRegEye fontSize={20} />
+                <FaRegEye fontSize={24} />
               ) : (
-                <FaEyeSlash fontSize={20} />
+                <FaEyeSlash fontSize={24} />
               )}
             </button>
           </div>
         </label>
 
         {/* Submit Button */}
-        <button className="bg-[#2db8e6] text-[#000814] rounded-md font-medium py-3">
+        <button className="bg-[#2db8e6] text-[#000814] rounded-md font-medium py-3 px-4 text-lg">
           Create Account
         </button>
       </form>
