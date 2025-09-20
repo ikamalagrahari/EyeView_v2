@@ -43,8 +43,8 @@ const featuresData = [
 
 const Features = () => {
   return (
-    <div className="min-h-screen bg-[var(--color-richblack-900)] text-white px-6 py-16 md:px-20">
-      <h1 className="text-4xl md:text-5xl font-bold text-[var(--color-richblack-5)] mb-12 text-center">
+    <div className="min-h-screen bg-(--color-richblack-900) text-white px-6 py-16 md:px-20">
+      <h1 className="text-4xl md:text-5xl font-bold text-(--color-richblack-5) mb-12 text-center">
         EyeView Features
       </h1>
 
@@ -52,13 +52,13 @@ const Features = () => {
         {featuresData.map((feature, index) => (
           <div
             key={index}
-            className="bg-[var(--color-richblack-800)] p-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300"
+            className="bg-(--color-richblack-800) p-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300"
           >
             <div className="text-[#47A5C5] mb-4">{feature.icon}</div>
-            <h3 className="text-xl font-semibold text-[var(--color-richblack-5)] mb-2">
+            <h3 className="text-xl font-semibold text-(--color-richblack-5) mb-2">
               {feature.title}
             </h3>
-            <p className="text-[var(--color-richblack-100)] text-sm">{feature.description}</p>
+            <p className="text-(--color-richblack-100) text-sm">{feature.description}</p>
           </div>
         ))}
       </div>

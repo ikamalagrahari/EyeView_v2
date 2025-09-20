@@ -16,7 +16,7 @@ const fadeUp = {
 
 function Home({ isLoggedIn }) {
   return (
-    <div className="min-h-screen bg-[var(--color-richblack-900)] text-white px-6 md:px-20 pt-20">
+    <div className="min-h-screen bg-(--color-richblack-900) text-white px-6 md:px-20 pt-20">
       <motion.div
         className="max-w-6xl w-full flex flex-col items-start gap-6"
         initial="hidden"
@@ -25,7 +25,7 @@ function Home({ isLoggedIn }) {
       >
         {/* Heading */}
         <motion.div className="flex-1" variants={fadeUp} custom={1}>
-          <h1 className="text-4xl md:text-6xl font-bold leading-tight text-[var(--color-richblack-5)] mb-4">
+          <h1 className="text-4xl md:text-6xl font-bold leading-tight text-(--color-richblack-5) mb-4">
             Real-Time Violence Detection <br />
             Powered by AI
           </h1>
@@ -33,7 +33,7 @@ function Home({ isLoggedIn }) {
 
         {/* Paragraph & Button */}
         <motion.div className="flex-1" variants={fadeUp} custom={2}>
-          <p className="text-[var(--color-richblack-100)] text-lg md:text-xl mb-8 max-w-xl">
+          <p className="text-(--color-richblack-100) text-lg md:text-xl mb-8 max-w-xl">
             Stay one step ahead with <strong className="text-[#2db8e6]">EyeView</strong> — monitor live feeds,
             detect violent behavior, and send instant alerts to admins.
           </p>
