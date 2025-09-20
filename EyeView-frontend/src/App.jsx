@@ -27,9 +27,13 @@ function App() {
           {sidebarOpen && <div className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden" onClick={() => setSidebarOpen(false)}></div>}
           <div className="flex-1 p-4 md:ml-0">
             <Routes>
+              <Route path="/" element={<Home isLoggedIn={isLoggedIn} />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/alerts" element={<Alerts />} />
               <Route path="/history" element={<History />} />
+              <Route path="/features" element={<Features />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
               <Route path="/settings" element={<div>Settings Page</div>} />
 
               {/*  Redirect unknown routes to Dashboard */}
