@@ -28,7 +28,11 @@ TWILIO_PHONE_NUMBER = os.getenv("TWILIO_PHONE_NUMBER")
 ADMIN_PHONE_NUMBER = os.getenv("ADMIN_PHONE_NUMBER")
 
 # Load YOLO model
-model = YOLO(r"C:\Users\sahil\OneDrive\Desktop\EyeView-v2\Backend\best.pt")
+# model = YOLO(r"C:\Users\sahil\OneDrive\Desktop\EyeView-v2\Backend\best.pt")
+
+# K:\EyeView_v2\Backend\best.pt
+
+model = YOLO(r"K:\EyeView_v2\Backend\best.pt")
 
 # Open webcam
 video_stream = cv2.VideoCapture(0)
@@ -37,12 +41,24 @@ video_stream.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 video_stream.set(cv2.CAP_PROP_FPS, 30)
 
 # Firebase setup
-cred = credentials.Certificate(r"C:\Users\sahil\OneDrive\Desktop\EyeView-v2\Backend\eyeview-v2-firebase-adminsdk-fbsvc-a1600b8e74.json")
-firebase_admin.initialize_app(cred, {
-    "databaseURL": "https://eyeview-v2-default-rtdb.firebaseio.com/"
-})
-alert_ref = db.reference("violence_detections")
-history_ref = db.reference("history_clips")
+firebase_initialized = False
+try:
+    cred = credentials.Certificate(r"K:\EyeView_v2\Backend\eyeview-v2-firebase-adminsdk-fbsvc-a1600b8e74.json")
+    firebase_admin.initialize_app(cred, {
+        "databaseURL": "https://eyeview-v2-default-rtdb.firebaseio.com/"
+    })
+    alert_ref = db.reference("violence_detections")
+    history_ref = db.reference("history_clips")
+    firebase_initialized = True
+    print("Firebase initialized successfully.")
+except FileNotFoundError:
+    print("Firebase credentials file not found. Firebase features will be disabled.")
+    alert_ref = None
+    history_ref = None
+except Exception as e:
+    print(f"Error initializing Firebase: {e}. Firebase features will be disabled.")
+    alert_ref = None
+    history_ref = None
 
 # Twilio setup
 client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
@@ -58,7 +74,7 @@ print(f" Clip save directory: {clip_save_dir}")
 
 def get_location():
     try:
-        response = requests.get("http://ip-api.com/json/")
+        response = requests.get("http://ip-api.com/json/", timeout=5)
         data = response.json()
         return f"{data['city']}, {data['regionName']}, {data['country']}"
     except:
@@ -82,7 +98,8 @@ def send_alert(frame, confidence):
     with open("alert_log.json", "a") as log_file:
         log_file.write(json.dumps(alert_data) + "\n")
 
-    alert_ref.push(alert_data)
+    if firebase_initialized:
+        alert_ref.push(alert_data)
 
     client.messages.create(
         body=f" Violence detected at {timestamp} | Confidence: {confidence:.2f} | Location: {location}",
@@ -94,6 +111,7 @@ def send_alert(frame, confidence):
     Thread(target=save_clip, args=(clip_save_dir,)).start()
 
 def save_clip(directory):
+    print("Starting save_clip")
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     timestamp_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"clip_{timestamp_str}.mp4"
@@ -113,6 +131,7 @@ def save_clip(directory):
         with frame_lock:
             success, frame = video_stream.read()
         if not success:
+            print("Failed to read frame")
             continue
         out.write(frame)
         frames_written += 1
@@ -130,11 +149,10 @@ def save_clip(directory):
         "filename": filename,
         "timestamp": datetime.datetime.now().isoformat()
     }
-    history_ref.push(clip_metadata)
+    if firebase_initialized:
+        history_ref.push(clip_metadata)
 
 def detect_and_stream():
-    alert_sent = False
-
     while True:
         with frame_lock:
             success, frame = video_stream.read()
@@ -151,19 +169,33 @@ def detect_and_stream():
             for box in result.boxes:
                 x1, y1, x2, y2 = map(int, box.xyxy[0])
                 confidence = float(box.conf[0])
+                class_id = int(box.cls[0])
+
+                print(f"Detected class {class_id} with confidence {confidence:.2f}")
 
                 x1 = int(x1 * w_ratio)
                 x2 = int(x2 * w_ratio)
                 y1 = int(y1 * h_ratio)
                 y2 = int(y2 * h_ratio)
 
-                cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-                cv2.putText(frame, f"Violence: {confidence:.2f}", (x1, y1 - 10),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+                # Assuming class 1 is violence (e.g., knife)
+                if class_id == 1:
+                    label = "Violence"
+                    color = (0, 0, 255)  # Red for violence
+                else:
+                    label = "Non-violence"
+                    color = (0, 255, 0)  # Green for non-violence
 
-                if confidence > 0.5 and not alert_sent:
-                    send_alert(frame, confidence)
-                    alert_sent = True
+                cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
+                cv2.putText(frame, f"{label}: {confidence:.2f}", (x1, y1 - 10),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+
+                if confidence > 0.4:
+                    print(f"Alert triggered for class {class_id} with confidence {confidence:.2f}")
+                    try:
+                        send_alert(frame, confidence)
+                    except Exception as e:
+                        print(f"Error sending alert: {e}")
 
         _, buffer = cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), 95])
         frame_bytes = buffer.tobytes()
@@ -177,12 +209,64 @@ def video_feed():
 
 @app.route('/history_clips')
 def list_clips():
-    clips = history_ref.get()
-    if not clips:
-        return jsonify([])
-    clips_array = [{"id": key, **value} for key, value in clips.items()]
+    if firebase_initialized:
+        clips = history_ref.get()
+        if not clips:
+            clips_array = []
+        else:
+            clips_array = [{"id": key, **value} for key, value in clips.items()]
+    else:
+        # List local files
+        import os
+        clips_array = []
+        if os.path.exists(clip_save_dir):
+            for filename in os.listdir(clip_save_dir):
+                if filename.endswith('.mp4'):
+                    filepath = os.path.join(clip_save_dir, filename)
+                    timestamp = os.path.getmtime(filepath)
+                    clips_array.append({
+                        "id": filename,
+                        "filename": filename,
+                        "timestamp": datetime.datetime.fromtimestamp(timestamp).isoformat()
+                    })
     clips_array.sort(key=lambda c: c.get("timestamp", ""), reverse=True)
     return jsonify(clips_array)
+
+@app.route('/alerts')
+def get_alerts():
+    print("Alerts endpoint called")
+    alerts = []
+    try:
+        with open("alert_log.json", "r") as f:
+            for line in f:
+                line = line.strip()
+                if line:
+                    alert = json.loads(line)
+                    # Map to frontend expected format
+                    alerts.append({
+                        "timestamp": alert["time"],
+                        "location": alert["location"],
+                        "confidence": alert["confidence"],
+                        "notified": True,  # Assume notified since logged
+                        "alert_type": "Violence Detected"
+                    })
+    except FileNotFoundError:
+        pass
+    except json.JSONDecodeError:
+        pass
+    print(f"Returning {len(alerts)} alerts")
+    return jsonify({"alerts": alerts})
+
+@app.route('/test_alert')
+def test_alert():
+    import numpy as np
+    # Create a dummy frame
+    frame = np.zeros((720, 1280, 3), dtype=np.uint8)
+    try:
+        send_alert(frame, 0.5)
+    except Exception as e:
+        print(f"Error in test_alert: {e}")
+    return "Alert triggered"
 
 @app.route('/history_clips/<path:filename>')
 def stream_video(filename):
