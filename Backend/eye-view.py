@@ -89,10 +89,15 @@ def send_alert(frame, confidence):
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     location = get_location()
 
+    # Generate clip filename
+    clip_timestamp_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    clip_filename = f"clip_{clip_timestamp_str}.mp4"
+
     alert_data = {
         "time": timestamp,
         "confidence": confidence,
-        "location": location
+        "location": location,
+        "video_url": f"http://localhost:5000/history_clips/{clip_filename}"
     }
 
     with open("alert_log.json", "a") as log_file:
@@ -108,13 +113,11 @@ def send_alert(frame, confidence):
     )
 
     last_alert_time = current_time
-    Thread(target=save_clip, args=(clip_save_dir,)).start()
+    Thread(target=save_clip, args=(clip_save_dir, clip_filename)).start()
 
-def save_clip(directory):
+def save_clip(directory, filename):
     print("Starting save_clip")
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    timestamp_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"clip_{timestamp_str}.mp4"
     filepath = os.path.join(directory, filename)
 
     print(f" Saving clip to: {filepath}")
@@ -248,7 +251,8 @@ def get_alerts():
                         "location": alert["location"],
                         "confidence": alert["confidence"],
                         "notified": True,  # Assume notified since logged
-                        "alert_type": "Violence Detected"
+                        "alert_type": "Violence Detected",
+                        "video_url": alert.get("video_url", None)
                     })
     except FileNotFoundError:
         pass
