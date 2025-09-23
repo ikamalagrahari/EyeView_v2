@@ -332,8 +332,11 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 **📬 Questions? Issues? Ideas?**  
 [💬 Start a Discussion](https://github.com/sahilhinge89/EyeView_v2/discussions) • [🐛 Report Bug](https://github.com/sahilhinge89/EyeView_v2/issues) • [💡 Request Feature](https://github.com/sahilhinge89/EyeView_v2/issues)
 
+<img width="800" height="444" alt="image" src="https://github.com/user-attachments/assets/d4b23505-4483-4b4a-a70f-93764ae65727" />
+
 ---
 
 **Built with ❤️ for a safer world**
 
 </div>
+
