@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import ReactPlayer from "react-player";
 
 // --- SVG Icon Components ---
 // By using inline SVGs, we remove the need for the external 'react-icons' library.
@@ -125,26 +124,33 @@ const HistorySection = () => {
                 </p>
 
                 {clip.videoUrl ? (
-                  <div className="w-full h-auto rounded-md bg-black overflow-hidden aspect-video">
-                    <ReactPlayer
-                      url={clip.videoUrl}
-                      controls={true}
-                      width="100%"
-                      height="100%"
-                      onError={(e) => {
-                        console.error(
-                          `Error loading video: ${clip.videoUrl}`,
-                          e
-                        );
-                      }}
-                    />
-                  </div>
-                ) : (
-                  <div className="w-full h-48 bg-gray-700 rounded-md flex flex-col items-center justify-center text-gray-400">
-                    <WarningIcon className="text-2xl mb-2 text-red-400" />
-                    <p>Video unavailable</p>
-                  </div>
-                )}
+                    <div className="w-full h-auto rounded-md bg-black overflow-hidden aspect-video">
+                      <video
+                        key={clip.videoUrl}
+                        src={clip.videoUrl}
+                        controls
+                        className="w-full h-full"
+                        preload="metadata"
+                        onError={(e) => {
+                          console.error(
+                            `Error loading video: ${clip.videoUrl}`,
+                            e.target.error ? `Error code: ${e.target.error.code}, message: ${e.target.error.message}` : 'Unknown error'
+                          );
+                        }}
+                        onLoadedData={() => console.log(`Video loaded: ${clip.videoUrl}`)}
+                        onCanPlay={() => console.log(`Video can play: ${clip.videoUrl}`)}
+                        onCanPlayThrough={() => console.log(`Video can play through: ${clip.videoUrl}`)}
+                        onLoadStart={() => console.log(`Video load start: ${clip.videoUrl}`)}
+                        onStalled={() => console.log(`Video stalled: ${clip.videoUrl}`)}
+                        onSuspend={() => console.log(`Video suspended: ${clip.videoUrl}`)}
+                      />
+                    </div>
+                  ) : (
+                   <div className="w-full h-48 bg-gray-700 rounded-md flex flex-col items-center justify-center text-gray-400">
+                     <WarningIcon className="text-2xl mb-2 text-red-400" />
+                     <p>Video unavailable</p>
+                   </div>
+                 )}
 
                 <p className="text-xs text-gray-500 mt-2 truncate flex items-center gap-2">
                   <VideoIcon className="text-gray-400" />
