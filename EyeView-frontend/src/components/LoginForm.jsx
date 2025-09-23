@@ -1,29 +1,34 @@
 import React, { useState } from 'react'
 import { FaEyeSlash, FaRegEye  } from "react-icons/fa";
 import {Link} from "react-router-dom";
-import {toast} from "react-hot-toast"
 import { useNavigate } from "react-router-dom"
-function LoginForm({setIsLoggedIn}) {
-   const navigate = useNavigate();
-   const [formData,setFormData] =useState({
-       email:"",password:""
-   })
+import { useAuth } from '../context/AuthContext';
 
-   const[showPassword, setShowPassword] =useState(false);
-   function changeHandler(event){
-       setFormData( (prevData) =>(
-           {
-               ...prevData,
-               [event.target.name]:event.target.value
-           }
-       ) )
-   }
-   function submitHandler(event){
-   event.preventDefault();
-   setIsLoggedIn(true);
-   toast.success("Login Successfully");
-   navigate("/dashboard")
-   }
+function LoginForm() {
+    const navigate = useNavigate();
+    const { login } = useAuth();
+    const [formData,setFormData] =useState({
+        email:"",password:""
+    })
+
+    const[showPassword, setShowPassword] =useState(false);
+    function changeHandler(event){
+        setFormData( (prevData) =>(
+            {
+                ...prevData,
+                [event.target.name]:event.target.value
+            }
+        ) )
+    }
+    async function submitHandler(event){
+        event.preventDefault();
+        try {
+            await login(formData.email, formData.password);
+            navigate("/dashboard");
+        } catch (error) {
+            // Error is handled in the auth context with toast
+        }
+    }
   return (
   <form onSubmit ={submitHandler} className='flex flex-col w-full gap-y-4 mt-6' >
    <label htmlFor="Logged In" className='w-full relative '>

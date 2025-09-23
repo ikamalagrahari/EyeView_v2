@@ -1,5 +1,6 @@
 from flask import Flask, Response, jsonify, send_from_directory, abort, request
 from flask_cors import CORS
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 import cv2
 import firebase_admin
 from firebase_admin import credentials, db
@@ -15,9 +16,21 @@ import subprocess
 from dotenv import load_dotenv
 from threading import Thread, Lock
 from collections import deque
+import hashlib
+import uuid
 
 app = Flask(__name__, static_folder="static")
 CORS(app)  # Allow all origins
+
+# JWT Setup
+app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'your-secret-key-change-in-production')
+jwt = JWTManager(app)
+
+# Simple user storage (in production, use a proper database)
+USERS_FILE = 'users.json'
+if not os.path.exists(USERS_FILE):
+    with open(USERS_FILE, 'w') as f:
+        json.dump({}, f)
 
 # --- Thread-safe Locks and Buffers ---
 frame_lock = Lock()  # Lock for accessing shared resources (frame buffer)
@@ -63,7 +76,7 @@ frame_buffer = deque(maxlen=MAX_BUFFER_SIZE)
 firebase_initialized = False
 try:
     # IMPORTANT: Update this path to your Firebase credentials file
-    cred_path = r"k:\EyeView_v2-1\Backend\eyeview-v2-firebase-adminsdk-fbsvc-a1600b8e74.json"
+    cred_path = os.path.join(os.path.dirname(__file__), "eyeview-v2-firebase-adminsdk-fbsvc-a1600b8e74.json")
     if not os.path.exists(cred_path):
         raise FileNotFoundError
     cred = credentials.Certificate(cred_path)
@@ -90,6 +103,45 @@ try:
 except Exception as e:
     print(f"Error initializing Twilio client: {e}")
     client = None
+
+# --- User Management Functions ---
+def load_users():
+    try:
+        with open(USERS_FILE, 'r') as f:
+            return json.load(f)
+    except:
+        return {}
+
+def save_users(users):
+    with open(USERS_FILE, 'w') as f:
+        json.dump(users, f)
+
+def hash_password(password):
+    return hashlib.sha256(password.encode()).hexdigest()
+
+def create_user(email, password, first_name, last_name):
+    users = load_users()
+    if email in users:
+        return False, "User already exists"
+
+    user_id = str(uuid.uuid4())
+    users[email] = {
+        'id': user_id,
+        'email': email,
+        'password': hash_password(password),
+        'first_name': first_name,
+        'last_name': last_name,
+        'created_at': datetime.datetime.now().isoformat()
+    }
+    save_users(users)
+    return True, user_id
+
+def authenticate_user(email, password):
+    users = load_users()
+    user = users.get(email)
+    if user and user['password'] == hash_password(password):
+        return user
+    return None
 
 # --- Alert System ---
 last_alert_time = 0
@@ -284,6 +336,77 @@ def detect_and_stream():
 
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+
+# --- Authentication Routes ---
+
+@app.route('/auth/register', methods=['POST'])
+def register():
+    data = request.get_json()
+    email = data.get('email')
+    password = data.get('password')
+    first_name = data.get('firstName', '')
+    last_name = data.get('lastName', '')
+
+    if not email or not password:
+        return jsonify({'error': 'Email and password are required'}), 400
+
+    success, result = create_user(email, password, first_name, last_name)
+    if success:
+        access_token = create_access_token(identity=email)
+        return jsonify({
+            'message': 'User created successfully',
+            'access_token': access_token,
+            'user': {
+                'id': result,
+                'email': email,
+                'first_name': first_name,
+                'last_name': last_name
+            }
+        }), 201
+    else:
+        return jsonify({'error': result}), 409
+
+@app.route('/auth/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    email = data.get('email')
+    password = data.get('password')
+
+    if not email or not password:
+        return jsonify({'error': 'Email and password are required'}), 400
+
+    user = authenticate_user(email, password)
+    if user:
+        access_token = create_access_token(identity=email)
+        return jsonify({
+            'message': 'Login successful',
+            'access_token': access_token,
+            'user': {
+                'id': user['id'],
+                'email': user['email'],
+                'first_name': user['first_name'],
+                'last_name': user['last_name']
+            }
+        }), 200
+    else:
+        return jsonify({'error': 'Invalid credentials'}), 401
+
+@app.route('/auth/profile', methods=['GET'])
+@jwt_required()
+def get_profile():
+    current_user = get_jwt_identity()
+    users = load_users()
+    user = users.get(current_user)
+    if user:
+        return jsonify({
+            'user': {
+                'id': user['id'],
+                'email': user['email'],
+                'first_name': user['first_name'],
+                'last_name': user['last_name']
+            }
+        }), 200
+    return jsonify({'error': 'User not found'}), 404
 
 # --- Flask Routes ---
 
