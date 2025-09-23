@@ -11,6 +11,7 @@ import json
 import requests
 import os
 import re
+import subprocess
 from dotenv import load_dotenv
 from threading import Thread, Lock
 from collections import deque
@@ -62,7 +63,7 @@ frame_buffer = deque(maxlen=MAX_BUFFER_SIZE)
 firebase_initialized = False
 try:
     # IMPORTANT: Update this path to your Firebase credentials file
-    cred_path = r"K:\EyeView_v2\Backend\eyeview-v2-firebase-adminsdk-fbsvc-a1600b8e74.json"
+    cred_path = r"k:\EyeView_v2-1\Backend\eyeview-v2-firebase-adminsdk-fbsvc-a1600b8e74.json"
     if not os.path.exists(cred_path):
         raise FileNotFoundError
     cred = credentials.Certificate(cred_path)
@@ -168,7 +169,7 @@ def send_alert(confidence):
     Thread(target=save_clip, args=(clip_save_dir, clip_filename, frames_to_save)).start()
 
 def save_clip(directory, filename, frames):
-    """Saves a list of frames to a video file."""
+    """Saves a list of frames to a video file using ffmpeg."""
     if not frames:
         print("Clip save failed: No frames in the buffer.")
         return
@@ -176,22 +177,41 @@ def save_clip(directory, filename, frames):
     filepath = os.path.join(directory, filename)
     print(f"Saving clip to: {filepath} ({len(frames)} frames)")
 
-    # Get video properties from the first frame
-    height, width, _ = frames[0].shape
-    
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    out = cv2.VideoWriter(filepath, fourcc, FPS, (width, height))
-    
-    if not out.isOpened():
-        print(f"Failed to open VideoWriter for path: {filepath}")
+    # Create temp dir for frames
+    temp_dir = os.path.join(directory, f'temp_frames_{os.path.splitext(filename)[0]}')
+    os.makedirs(temp_dir, exist_ok=True)
+
+    # Save frames as png
+    for i, frame in enumerate(frames):
+        frame_path = os.path.join(temp_dir, f'frame_{i:04d}.png')
+        cv2.imwrite(frame_path, frame)
+
+    # Use ffmpeg to create mp4
+    ffmpeg_cmd = [
+        'C:\\ffmpeg-master-latest-win64-gpl-shared\\bin\\ffmpeg.exe',
+        '-y',  # overwrite
+        '-framerate', str(FPS),
+        '-i', os.path.join(temp_dir, 'frame_%04d.png'),
+        '-c:v', 'libx264',
+        '-pix_fmt', 'yuv420p',
+        filepath
+    ]
+
+    try:
+        subprocess.run(ffmpeg_cmd, check=True)
+        print(f"Clip successfully saved: {filename}")
+    except subprocess.CalledProcessError as e:
+        print(f"Failed to create video with ffmpeg: {e}")
+        # Clean up temp frames on failure
+        for f in os.listdir(temp_dir):
+            os.remove(os.path.join(temp_dir, f))
+        os.rmdir(temp_dir)
         return
 
-    # Write all frames from the buffer
-    for frame in frames:
-        out.write(frame)
-    
-    out.release()
-    print(f"Clip successfully saved: {filename}")
+    # Clean up temp frames
+    for f in os.listdir(temp_dir):
+        os.remove(os.path.join(temp_dir, f))
+    os.rmdir(temp_dir)
 
     # Update history in Firebase
     if firebase_initialized:
@@ -327,7 +347,7 @@ def get_alerts():
 @app.route('/history_clips/<path:filename>')
 def stream_video(filename):
     """Serves a specific video clip file."""
-    return send_from_directory(clip_save_dir, filename, mimetype="video/mp4")
+    return send_from_directory(clip_save_dir, filename, mimetype='video/mp4')
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
