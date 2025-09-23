@@ -32,7 +32,7 @@ ADMIN_PHONE_NUMBER = os.getenv("ADMIN_PHONE_NUMBER")
 
 # K:\EyeView_v2\Backend\best.pt
 
-model = YOLO(r"K:\EyeView_v2\Backend\best.pt")
+model = YOLO("best.pt")
 
 # Open webcam
 video_stream = cv2.VideoCapture(0)
