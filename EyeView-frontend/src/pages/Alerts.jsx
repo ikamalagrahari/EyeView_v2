@@ -1,31 +1,44 @@
 import React, { useEffect, useState } from 'react';
-import { FaExclamationTriangle, FaMapMarkerAlt, FaClock } from "react-icons/fa";
+import { FaExclamationTriangle, FaMapMarkerAlt, FaClock, FaSync } from "react-icons/fa";
 import axios from 'axios';
 
 const Alerts = () => {
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchAlerts = async () => {
-      try {
-        const response = await axios.get("http://localhost:5000/alerts"); // Replace with your actual API endpoint
-        setAlerts(response.data.alerts || []);
-      } catch (err) {
-        console.error("Error fetching alerts:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchAlerts = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get("http://localhost:5000/alerts");
+      const sortedAlerts = (response.data.alerts || []).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+      setAlerts(sortedAlerts);
+    } catch (err) {
+      console.error("Error fetching alerts:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchAlerts();
+    const interval = setInterval(fetchAlerts, 5000); // Poll every 5 seconds
+    return () => clearInterval(interval);
   }, []);
 
   return (
     <div className="p-6 bg-gray-900 min-h-screen text-white">
-      <h1 className="text-3xl font-bold mb-6 flex items-center gap-2">
-        <FaExclamationTriangle className="text-red-500" /> Alert Section
-      </h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold flex items-center gap-2">
+          <FaExclamationTriangle className="text-red-500" /> Alert Section
+        </h1>
+        <button
+          onClick={fetchAlerts}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+          disabled={loading}
+        >
+          <FaSync className={loading ? "animate-spin" : ""} /> Refresh
+        </button>
+      </div>
 
       {loading ? (
         <p className="text-gray-400">Loading alerts...</p>

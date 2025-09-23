@@ -9,7 +9,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "start:frontend": "vite",
-    "start:backend": "cd ../backend && python app.py", 
+    "start:backend": "cd ../backend && python app.py",
     "start:all": "concurrently \"npm run start:backend\" \"npm run start:frontend\""
   },
   "dependencies": {
@@ -21,6 +21,7 @@
     "react-dom": "^19.0.0",
     "react-hot-toast": "^2.5.2",
     "react-icons": "^5.5.0",
+    "react-player": "^3.3.3",
     "react-router-dom": "^7.3.0"
   },
   "devDependencies": {
