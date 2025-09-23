@@ -63,7 +63,7 @@ frame_buffer = deque(maxlen=MAX_BUFFER_SIZE)
 firebase_initialized = False
 try:
     # IMPORTANT: Update this path to your Firebase credentials file
-    cred_path = r"k:\EyeView_v2-1\Backend\eyeview-v2-firebase-adminsdk-fbsvc-a1600b8e74.json"
+    cred_path = os.path.join(os.path.dirname(__file__), "eyeview-v2-firebase-adminsdk-fbsvc-a1600b8e74.json")
     if not os.path.exists(cred_path):
         raise FileNotFoundError
     cred = credentials.Certificate(cred_path)
