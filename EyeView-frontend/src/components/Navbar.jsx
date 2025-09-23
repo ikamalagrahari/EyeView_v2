@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from "react-router-dom";
-import { toast } from 'react-hot-toast';
+import { useAuth } from '../context/AuthContext';
 import { motion } from "framer-motion";
 import { FiMenu, FiX } from 'react-icons/fi';
 
@@ -22,8 +22,9 @@ const navItem = {
   }),
 };
 
-const Navbar = ({ isLoggedIn, setIsLoggedIn, sidebarOpen, setSidebarOpen }) => {
+const Navbar = ({ user, sidebarOpen, setSidebarOpen }) => {
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navLinks = ["Home", "Features", "About", "Contact"];
@@ -58,7 +59,7 @@ const Navbar = ({ isLoggedIn, setIsLoggedIn, sidebarOpen, setSidebarOpen }) => {
         </nav>
 
         <div className="flex items-center gap-x-4">
-          {!isLoggedIn && (
+          {!user && (
             <Link to="/login">
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -69,7 +70,7 @@ const Navbar = ({ isLoggedIn, setIsLoggedIn, sidebarOpen, setSidebarOpen }) => {
               </motion.button>
             </Link>
           )}
-          {!isLoggedIn && (
+          {!user && (
             <Link to="/signup">
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -80,13 +81,12 @@ const Navbar = ({ isLoggedIn, setIsLoggedIn, sidebarOpen, setSidebarOpen }) => {
               </motion.button>
             </Link>
           )}
-          {isLoggedIn && (
+          {user && (
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => {
-                setIsLoggedIn(false);
-                toast.success("Logged Out");
+              onClick={async () => {
+                await logout();
                 navigate("/");
               }}
               className="bg-[#161D29] text-[#AFB2BF] py-2 px-4 rounded-[8px] border border-[#2C333F] text-lg"
@@ -94,7 +94,7 @@ const Navbar = ({ isLoggedIn, setIsLoggedIn, sidebarOpen, setSidebarOpen }) => {
               Logout
             </motion.button>
           )}
-          {isLoggedIn && (
+          {user && (
             <Link to="/dashboard">
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -107,7 +107,7 @@ const Navbar = ({ isLoggedIn, setIsLoggedIn, sidebarOpen, setSidebarOpen }) => {
           )}
           <button
             onClick={() => {
-              if (isLoggedIn) {
+              if (user) {
                 setSidebarOpen(!sidebarOpen);
               } else {
                 setMobileMenuOpen(!mobileMenuOpen);
@@ -121,7 +121,7 @@ const Navbar = ({ isLoggedIn, setIsLoggedIn, sidebarOpen, setSidebarOpen }) => {
       </motion.div>
 
       {/* Mobile Menu Overlay */}
-      {mobileMenuOpen && !isLoggedIn && (
+      {mobileMenuOpen && !user && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 md:hidden">
           <div className="bg-(--color-richblack-800) w-full h-full flex flex-col items-center justify-center">
             <button

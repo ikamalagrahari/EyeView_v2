@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { FaEyeSlash, FaRegEye } from "react-icons/fa";
-import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from '../context/AuthContext';
 
-const SignupForm = ({ setIsLoggedIn }) => {
+const SignupForm = () => {
   const navigate = useNavigate();
+  const { signup } = useAuth();
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -24,18 +25,19 @@ const SignupForm = ({ setIsLoggedIn }) => {
     }));
   }
 
-  function submitHandler(event) {
+  async function submitHandler(event) {
     event.preventDefault();
     if (formData.password !== formData.confirmPassword) {
-      toast.error("Passwords do not match");
+      alert("Passwords do not match");
       return;
     }
 
-    setIsLoggedIn(true);
-    toast.success("Account Created");
-
-    console.log("Printing account data:", formData);
-    navigate("/dashboard");
+    try {
+      await signup(formData.email, formData.password, formData.firstName, formData.lastName);
+      navigate("/dashboard");
+    } catch (error) {
+      // Error is handled in the auth context
+    }
   }
 
   return (
