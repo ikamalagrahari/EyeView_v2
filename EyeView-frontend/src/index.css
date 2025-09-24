@@ -35,4 +35,56 @@
     --color-richblack-800: #161D29;
     --color-richblack-900: #000814;
   }
+
+/* Mobile responsiveness enhancements */
+@media (max-width: 768px) {
+  /* Ensure minimum touch target size */
+  button, .btn, input[type="submit"], input[type="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Improve text readability on small screens */
+  body {
+    font-size: 16px;
+    line-height: 1.5;
+  }
+
+  /* Reduce padding on mobile for better space usage */
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  /* Ensure images are responsive */
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+/* Additional mobile optimizations */
+@media (max-width: 480px) {
+  /* Smaller font sizes for very small screens */
+  h1 {
+    font-size: 2rem !important;
+  }
+
+  h2 {
+    font-size: 1.5rem !important;
+  }
+
+  h3 {
+    font-size: 1.25rem !important;
+  }
+
+  /* Adjust spacing */
+  .space-y-8 > * + * {
+    margin-top: 1.5rem !important;
+  }
+
+  .gap-8 {
+    gap: 1.5rem !important;
+  }
+}
   

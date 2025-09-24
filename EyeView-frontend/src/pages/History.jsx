@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { motion } from 'framer-motion';
+import { FaHistory, FaVideo, FaClock, FaPlay, FaDownload, FaEye } from "react-icons/fa";
 
 // --- SVG Icon Components ---
 // By using inline SVGs, we remove the need for the external 'react-icons' library.
@@ -66,6 +68,7 @@ const WarningIcon = ({ className }) => (
 const HistorySection = () => {
   const [historyClips, setHistoryClips] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [videoErrors, setVideoErrors] = useState(new Set());
 
   useEffect(() => {
     const fetchHistoryClips = async () => {
@@ -78,6 +81,7 @@ const HistorySection = () => {
         const clipsWithUrls = clipsData.map((clip) => ({
           ...clip,
           videoUrl: `http://localhost:5000${clip.url}`,
+          thumbnailUrl: clip.thumbnail_url ? `http://localhost:5000${clip.thumbnail_url}` : null,
         }));
 
         setHistoryClips(clipsWithUrls);
@@ -93,74 +97,153 @@ const HistorySection = () => {
   }, []);
 
   return (
-    <div className="p-6 bg-gray-900 text-white rounded-xl shadow-md">
-      <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-        <HistoryIcon className="text-[#2db8e6]" /> History Clips
-      </h2>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-8">
+      <div className="max-w-7xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-12"
+        >
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-green-400 via-blue-500 to-purple-500 bg-clip-text text-transparent mb-4">
+            Video History
+          </h1>
+          <p className="text-gray-400 text-lg">Recorded security incidents and surveillance footage</p>
+        </motion.div>
 
-      {loading ? (
-        <p className="text-gray-300">Loading clips...</p>
-      ) : historyClips.length === 0 ? (
-        <div className="text-center py-8 bg-gray-800 rounded-lg">
-          <VideoIcon className="mx-auto text-4xl text-gray-500 mb-2" />
-          <p className="text-gray-400">No clips available.</p>
-          <p className="text-xs text-gray-500 mt-1">
-            Recordings will appear here after an alert is triggered.
-          </p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {historyClips.map((clip) => {
-            const readableTime = new Date(clip.timestamp).toLocaleString();
+        {loading ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex flex-col items-center justify-center py-20"
+          >
+            <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p className="text-gray-400 text-lg">Loading video history...</p>
+          </motion.div>
+        ) : historyClips.length === 0 ? (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center py-20"
+          >
+            <div className="w-24 h-24 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-6 border border-gray-600">
+              <FaVideo className="text-gray-600 text-3xl" />
+            </div>
+            <h3 className="text-2xl font-semibold text-gray-400 mb-2">No Recordings Yet</h3>
+            <p className="text-gray-500 max-w-md mx-auto">
+              Security footage will appear here when incidents are detected and recorded by the system.
+            </p>
+            <div className="mt-6 p-4 bg-gray-800/50 rounded-xl border border-gray-700">
+              <p className="text-sm text-gray-400">
+                💡 <strong>Tip:</strong> The system automatically records video clips when violence or suspicious activity is detected.
+              </p>
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8"
+          >
+            {historyClips.map((clip, index) => {
+              const readableTime = new Date(clip.timestamp).toLocaleString();
 
-            return (
-              <div
-                key={clip.id}
-                className="bg-gray-800 rounded-lg p-4 shadow-lg hover:shadow-cyan-500/20 transition-shadow duration-300"
-              >
-                <p className="text-sm text-gray-400 mb-2 flex items-center gap-2">
-                  <ClockIcon className="text-cyan-400" />
-                  <span>{readableTime}</span>
-                </p>
+              return (
+                <motion.div
+                  key={clip.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  whileHover={{ scale: 1.03, y: -5 }}
+                  className="bg-gradient-to-br from-gray-800 to-gray-700 rounded-2xl overflow-hidden shadow-2xl border border-gray-600 hover:border-blue-400/50 transition-all duration-300"
+                >
+                  {/* Video Thumbnail */}
+                  <div className="relative group">
+                    {clip.videoUrl && !videoErrors.has(clip.id) ? (
+                      <div className="aspect-video bg-black overflow-hidden">
+                        <video
+                          key={clip.videoUrl}
+                          src={clip.videoUrl}
+                          poster={clip.thumbnailUrl}
+                          className="w-full h-full object-cover"
+                          preload="none"
+                          muted
+                          onError={(e) => {
+                            console.error(`Error loading video: ${clip.videoUrl}`, e.target.error);
+                            setVideoErrors(prev => new Set([...prev, clip.id]));
+                          }}
+                        />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center">
+                          <motion.div
+                            whileHover={{ scale: 1.1 }}
+                            className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center"
+                          >
+                            <FaPlay className="text-white ml-1" />
+                          </motion.div>
+                        </div>
+                        <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-sm px-2 py-1 rounded-full text-xs text-white flex items-center gap-1">
+                          <FaEye className="text-blue-400" />
+                          <span>HD</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="aspect-video bg-gradient-to-br from-gray-700 to-gray-600 flex flex-col items-center justify-center">
+                        <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mb-3">
+                          <WarningIcon className="text-red-400 text-2xl" />
+                        </div>
+                        <p className="text-gray-400 text-sm text-center">
+                          {videoErrors.has(clip.id) ? "Video Corrupted" : "Video Unavailable"}
+                        </p>
+                        <p className="text-gray-500 text-xs text-center mt-1">
+                          {videoErrors.has(clip.id) ? "Recording failed" : "No video file"}
+                        </p>
+                      </div>
+                    )}
+                  </div>
 
-                {clip.videoUrl ? (
-                    <div className="w-full h-auto rounded-md bg-black overflow-hidden aspect-video">
-                      <video
-                        key={clip.videoUrl}
-                        src={clip.videoUrl}
-                        controls
-                        className="w-full h-full"
-                        preload="metadata"
-                        onError={(e) => {
-                          console.error(
-                            `Error loading video: ${clip.videoUrl}`,
-                            e.target.error ? `Error code: ${e.target.error.code}, message: ${e.target.error.message}` : 'Unknown error'
-                          );
-                        }}
-                        onLoadedData={() => console.log(`Video loaded: ${clip.videoUrl}`)}
-                        onCanPlay={() => console.log(`Video can play: ${clip.videoUrl}`)}
-                        onCanPlayThrough={() => console.log(`Video can play through: ${clip.videoUrl}`)}
-                        onLoadStart={() => console.log(`Video load start: ${clip.videoUrl}`)}
-                        onStalled={() => console.log(`Video stalled: ${clip.videoUrl}`)}
-                        onSuspend={() => console.log(`Video suspended: ${clip.videoUrl}`)}
-                      />
+                  {/* Video Info */}
+                  <div className="p-6">
+                    <div className="flex items-center gap-2 text-gray-400 text-sm mb-3">
+                      <FaClock className="text-blue-400" />
+                      <span>{readableTime}</span>
                     </div>
-                  ) : (
-                   <div className="w-full h-48 bg-gray-700 rounded-md flex flex-col items-center justify-center text-gray-400">
-                     <WarningIcon className="text-2xl mb-2 text-red-400" />
-                     <p>Video unavailable</p>
-                   </div>
-                 )}
 
-                <p className="text-xs text-gray-500 mt-2 truncate flex items-center gap-2">
-                  <VideoIcon className="text-gray-400" />
-                  <span>{clip.filename}</span>
-                </p>
-              </div>
-            );
-          })}
-        </div>
-      )}
+                    <h3 className="text-lg font-semibold text-white mb-2 truncate">
+                      {clip.filename}
+                    </h3>
+
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1 text-gray-400 text-sm">
+                        <FaVideo className="text-green-400" />
+                        <span>MP4</span>
+                      </div>
+
+                      <motion.button
+                        whileHover={{ scale: videoErrors.has(clip.id) ? 1 : 1.05 }}
+                        whileTap={{ scale: videoErrors.has(clip.id) ? 1 : 0.95 }}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 flex items-center gap-2 ${
+                          videoErrors.has(clip.id)
+                            ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                            : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white'
+                        }`}
+                        onClick={() => !videoErrors.has(clip.id) && window.open(clip.videoUrl, '_blank')}
+                        disabled={videoErrors.has(clip.id)}
+                      >
+                        <FaDownload />
+                        {videoErrors.has(clip.id) ? 'Corrupted' : 'View'}
+                      </motion.button>
+                    </div>
+                  </div>
+
+                  {/* Decorative bottom border */}
+                  <div className="h-1 bg-gradient-to-r from-transparent via-blue-400/50 to-transparent"></div>
+                </motion.div>
+              );
+            })}
+          </motion.div>
+        )}
+      </div>
     </div>
   );
 };
