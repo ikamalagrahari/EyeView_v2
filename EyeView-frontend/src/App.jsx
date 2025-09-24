@@ -10,9 +10,12 @@ import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import Alerts from "./pages/Alerts";
 import History from "./pages/History";
+import Profile from "./pages/Profile";
+import Analytics from "./pages/Analytics";
 import Features from "./pages/Features";
 import Contact from "./pages/Contact";
 import About from "./pages/About";
+import Pricing from "./pages/Pricing";
 import { useAuth } from "./context/AuthContext";
 
 function App() {
@@ -21,7 +24,7 @@ function App() {
 
   return (
     <div className="w-screen bg-(--color-richblack-900) flex flex-col">
-      <Navbar user={user} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+      {!user && <Navbar user={user} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />}
 
       {user ? (
         <div className="flex relative">
@@ -33,9 +36,12 @@ function App() {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/alerts" element={<Alerts />} />
               <Route path="/history" element={<History />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/analytics" element={<Analytics />} />
               <Route path="/features" element={<Features />} />
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
+              <Route path="/pricing" element={<Pricing />} />
               <Route path="/settings" element={<div>Settings Page</div>} />
 
               {/*  Redirect unknown routes to Dashboard */}
@@ -51,7 +57,8 @@ function App() {
           <Route path="/features" element={<Features />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
-          
+          <Route path="/pricing" element={<Pricing />} />
+
 
 
           {/*  Redirect unauthorized users to Home */}
