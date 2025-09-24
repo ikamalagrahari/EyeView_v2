@@ -122,6 +122,10 @@ cd EyeView_v2
 # Navigate to backend directory
 cd Backend
 
+# Ensure Firebase credentials file is present
+# The file 'eyeview-v2-firebase-adminsdk-fbsvc-a1600b8e74.json' should be in this directory
+ls eyeview-v2-firebase-adminsdk-fbsvc-a1600b8e74.json
+
 # Create virtual environment
 python -m venv venv
 ```
@@ -306,6 +310,32 @@ Open your browser and navigate to the displayed URL (typically `http://localhost
 - [ ] 🔐 **Enhanced Security**: Advanced authentication and encryption
 - [ ] 📱 **Mobile App**: Native mobile applications for field operations
 - [ ] 🏗️ **Scalability**: Kubernetes deployment and microservices architecture
+
+---
+
+## 🐛 Troubleshooting
+
+### Firebase Credentials Not Found
+
+If you encounter the error "Firebase credentials file not found. Firebase features will be disabled":
+
+1. **Verify File Location**: Ensure `eyeview-v2-firebase-adminsdk-fbsvc-a1600b8e74.json` is in the `Backend/` directory
+2. **Download Credentials**: Get the service account key from Firebase Console → Project Settings → Service Accounts
+3. **File Permissions**: Ensure the file is readable by the application
+4. **Path Issues**: The application now uses relative paths, so running from the correct directory is crucial
+
+### Backend Won't Start
+
+- Check Python version (3.8+ recommended)
+- Verify all dependencies are installed: `pip install -r requirements.txt`
+- Ensure webcam/camera is accessible
+- Check for port conflicts on 5000
+
+### Frontend Connection Issues
+
+- Verify backend is running on `http://localhost:5000`
+- Check CORS settings in Flask app
+- Ensure `REACT_APP_API_BASE_URL` is set correctly in frontend `.env`
 
 ---
 

@@ -28,7 +28,7 @@ TWILIO_PHONE_NUMBER = os.getenv("TWILIO_PHONE_NUMBER")
 ADMIN_PHONE_NUMBER = os.getenv("ADMIN_PHONE_NUMBER")
 
 # Load YOLO model
-model = YOLO(r"C:\Users\sahil\OneDrive\Desktop\EyeView-v2\Backend\best.pt")
+model = YOLO("best.pt")
 
 # Open webcam  
 video_stream = cv2.VideoCapture(0)
@@ -37,7 +37,7 @@ video_stream.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 video_stream.set(cv2.CAP_PROP_FPS, 30)
 
 # Firebase setup
-cred = credentials.Certificate(r"C:\Users\sahil\OneDrive\Desktop\EyeView-v2\Backend\eyeview-v2-firebase-adminsdk-fbsvc-a1600b8e74.json")
+cred = credentials.Certificate(os.path.join(os.path.dirname(__file__), "eyeview-v2-firebase-adminsdk-fbsvc-a1600b8e74.json"))
 firebase_admin.initialize_app(cred, {
     "databaseURL": "https://eyeview-v2-default-rtdb.firebaseio.com/"
 })

@@ -77,6 +77,7 @@ firebase_initialized = False
 try:
     # IMPORTANT: Update this path to your Firebase credentials file
     cred_path = "eyeview-v2-firebase-adminsdk-fbsvc-a1600b8e74.json"
+
     if not os.path.exists(cred_path):
         raise FileNotFoundError
     cred = credentials.Certificate(cred_path)
