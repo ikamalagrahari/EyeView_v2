@@ -144,7 +144,7 @@ const Analytics = () => {
           transition={{ duration: 0.6 }}
           className="text-center mb-12"
         >
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent mb-4">
+          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent mb-4">
             Analytics Dashboard
           </h1>
           <p className="text-gray-400 text-lg">Comprehensive insights into your eyeview.ai system performance</p>

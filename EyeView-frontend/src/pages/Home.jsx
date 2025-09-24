@@ -30,7 +30,7 @@ function Home({ user }) {
       >
         {/* Heading */}
         <motion.div className="flex-1" variants={fadeUp} custom={1}>
-          <h1 className="text-5xl md:text-7xl font-bold leading-tight mb-6">
+          <h1 className="text-4xl md:text-7xl font-bold leading-tight mb-6">
             <span className="bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent">
               Real-Time Violence
             </span>

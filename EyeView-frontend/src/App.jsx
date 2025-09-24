@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Route, Routes, Navigate } from "react-router-dom"; //  Import Navigate
+import { FaBars } from "react-icons/fa";
 import "./App.css";
 import Navbar from "./components/Navbar";
 import Sidebar from "./components/Sidebar";
@@ -23,14 +24,29 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="w-screen bg-(--color-richblack-900) flex flex-col">
+    <div className="w-screen bg-gray-900 flex flex-col">
       {!user && <Navbar user={user} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />}
 
       {user ? (
         <div className="flex relative">
           <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-          {sidebarOpen && <div className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden" onClick={() => setSidebarOpen(false)}></div>}
+          {sidebarOpen && (
+            <div
+              className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+              onClick={() => setSidebarOpen(false)}
+            ></div>
+          )}
           <div className="flex-1 p-4 md:ml-0">
+            {/* Mobile Sidebar Toggle */}
+            <div className="md:hidden mb-4">
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="text-white text-2xl p-3 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors touch-manipulation"
+                aria-label="Open sidebar"
+              >
+                <FaBars />
+              </button>
+            </div>
             <Routes>
               <Route path="/" element={<Home user={user} />} />
               <Route path="/dashboard" element={<Dashboard />} />
@@ -43,8 +59,7 @@ function App() {
               <Route path="/contact" element={<Contact />} />
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/settings" element={<div>Settings Page</div>} />
-
-              {/*  Redirect unknown routes to Dashboard */}
+              {/* Redirect unknown routes to Dashboard */}
               <Route path="*" element={<Navigate to="/dashboard" />} />
             </Routes>
           </div>
