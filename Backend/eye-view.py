@@ -76,7 +76,8 @@ frame_buffer = deque(maxlen=MAX_BUFFER_SIZE)
 firebase_initialized = False
 try:
     # IMPORTANT: Update this path to your Firebase credentials file
-    cred_path = os.path.join(os.path.dirname(__file__), "eyeview-v2-firebase-adminsdk-fbsvc-a1600b8e74.json")
+    cred_path = "eyeview-v2-firebase-adminsdk-fbsvc-a1600b8e74.json"
+
     if not os.path.exists(cred_path):
         raise FileNotFoundError
     cred = credentials.Certificate(cred_path)
@@ -131,7 +132,14 @@ def create_user(email, password, first_name, last_name):
         'password': hash_password(password),
         'first_name': first_name,
         'last_name': last_name,
-        'created_at': datetime.datetime.now().isoformat()
+        'created_at': datetime.datetime.now().isoformat(),
+        'analytics': {
+            'login_count': 0,
+            'last_login': None,
+            'login_history': [],
+            'total_alerts_viewed': 0,
+            'total_clips_viewed': 0
+        }
     }
     save_users(users)
     return True, user_id
@@ -140,6 +148,28 @@ def authenticate_user(email, password):
     users = load_users()
     user = users.get(email)
     if user and user['password'] == hash_password(password):
+        # Update login analytics
+        current_time = datetime.datetime.now().isoformat()
+        if 'analytics' not in user:
+            user['analytics'] = {
+                'login_count': 0,
+                'last_login': None,
+                'login_history': [],
+                'total_alerts_viewed': 0,
+                'total_clips_viewed': 0
+            }
+
+        user['analytics']['login_count'] += 1
+        user['analytics']['last_login'] = current_time
+        user['analytics']['login_history'].append({
+            'timestamp': current_time,
+            'ip': request.remote_addr
+        })
+
+        # Keep only last 50 login records
+        user['analytics']['login_history'] = user['analytics']['login_history'][-50:]
+
+        save_users(users)
         return user
     return None
 
@@ -252,6 +282,27 @@ def save_clip(directory, filename, frames):
     try:
         subprocess.run(ffmpeg_cmd, check=True)
         print(f"Clip successfully saved: {filename}")
+
+        # Generate thumbnail from the first frame
+        thumbnail_filename = f"{os.path.splitext(filename)[0]}_thumb.jpg"
+        thumbnail_path = os.path.join(directory, thumbnail_filename)
+
+        thumbnail_cmd = [
+            'C:\\ffmpeg-master-latest-win64-gpl-shared\\bin\\ffmpeg.exe',
+            '-y',  # overwrite
+            '-i', filepath,
+            '-ss', '00:00:00.100',  # Take frame at 0.1 seconds (earlier for short clips)
+            '-vframes', '1',  # Extract 1 frame
+            '-q:v', '2',  # High quality
+            thumbnail_path
+        ]
+
+        try:
+            subprocess.run(thumbnail_cmd, check=True)
+            print(f"Thumbnail generated: {thumbnail_filename}")
+        except subprocess.CalledProcessError as e:
+            print(f"Failed to generate thumbnail: {e}")
+
     except subprocess.CalledProcessError as e:
         print(f"Failed to create video with ffmpeg: {e}")
         # Clean up temp frames on failure
@@ -403,10 +454,83 @@ def get_profile():
                 'id': user['id'],
                 'email': user['email'],
                 'first_name': user['first_name'],
-                'last_name': user['last_name']
+                'last_name': user['last_name'],
+                'created_at': user['created_at']
             }
         }), 200
     return jsonify({'error': 'User not found'}), 404
+
+@app.route('/auth/profile', methods=['PUT'])
+@jwt_required()
+def update_profile():
+    current_user = get_jwt_identity()
+    data = request.get_json()
+
+    users = load_users()
+    if current_user not in users:
+        return jsonify({'error': 'User not found'}), 404
+
+    # Update allowed fields
+    allowed_fields = ['first_name', 'last_name']
+    for field in allowed_fields:
+        if field in data:
+            users[current_user][field] = data[field]
+
+    save_users(users)
+
+    return jsonify({
+        'message': 'Profile updated successfully',
+        'user': {
+            'id': users[current_user]['id'],
+            'email': users[current_user]['email'],
+            'first_name': users[current_user]['first_name'],
+            'last_name': users[current_user]['last_name'],
+            'created_at': users[current_user]['created_at']
+        }
+    }), 200
+
+@app.route('/auth/analytics', methods=['GET'])
+@jwt_required()
+def get_analytics():
+    current_user = get_jwt_identity()
+    users = load_users()
+    user = users.get(current_user)
+
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+
+    # Get all users for admin stats (simplified - in production, check admin role)
+    all_users = load_users()
+
+    # Calculate analytics
+    total_users = len(all_users)
+    active_users = sum(1 for u in all_users.values() if u.get('analytics', {}).get('last_login'))
+
+    # Login trends (last 7 days)
+    login_trends = {}
+    for u in all_users.values():
+        history = u.get('analytics', {}).get('login_history', [])
+        for login in history[-30:]:  # Last 30 logins
+            date = login['timestamp'][:10]  # YYYY-MM-DD
+            login_trends[date] = login_trends.get(date, 0) + 1
+
+    # User-specific analytics
+    user_analytics = user.get('analytics', {
+        'login_count': 0,
+        'last_login': None,
+        'login_history': [],
+        'total_alerts_viewed': 0,
+        'total_clips_viewed': 0
+    })
+
+    return jsonify({
+        'user_analytics': user_analytics,
+        'global_analytics': {
+            'total_users': total_users,
+            'active_users': active_users,
+            'login_trends': login_trends
+        }
+    }), 200
 
 # --- Flask Routes ---
 
@@ -434,12 +558,19 @@ def list_clips():
     for filename in files:
         filepath = os.path.join(clip_save_dir, filename)
         timestamp = os.path.getmtime(filepath)
+
+        # Check if thumbnail exists
+        thumbnail_filename = f"{os.path.splitext(filename)[0]}_thumb.jpg"
+        thumbnail_path = os.path.join(clip_save_dir, thumbnail_filename)
+        thumbnail_url = f"/thumbnails/{thumbnail_filename}" if os.path.exists(thumbnail_path) else None
+
         clips_array.append({
             "id": filename,
             "filename": filename,
             "timestamp": datetime.datetime.fromtimestamp(timestamp).isoformat(),
             # This relative URL is used by the frontend to construct the full playable path.
-            "url": f"/history_clips/{filename}"
+            "url": f"/history_clips/{filename}",
+            "thumbnail_url": thumbnail_url
         })
     return jsonify(clips_array)
 
@@ -471,6 +602,11 @@ def get_alerts():
 def stream_video(filename):
     """Serves a specific video clip file."""
     return send_from_directory(clip_save_dir, filename, mimetype='video/mp4')
+
+@app.route('/thumbnails/<path:filename>')
+def serve_thumbnail(filename):
+    """Serves a specific thumbnail image."""
+    return send_from_directory(clip_save_dir, filename, mimetype='image/jpeg')
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
