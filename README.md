@@ -17,6 +17,8 @@
 </div>
 
 ## ✨ Features
+<img width="970" height="595" alt="Screenshot 2025-10-06 215134" src="https://github.com/user-attachments/assets/e972cedb-4e5f-4952-8564-d9f4b8b6e050" />
+
 
 EyeView leverages cutting-edge **YOLO deep learning** models integrated with **Flask** backend and **React** frontend to create a comprehensive safety monitoring solution.
 
